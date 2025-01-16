@@ -1,6 +1,6 @@
 import { TaskBoard } from '@/components/tasks/task-board'
-import { TaskToolbar } from '@/components/tasks/task-toolbar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { TaskProvider } from '@/contexts/task-context'
 import Image from 'next/image'
 
 export default function Home() {
@@ -23,7 +23,9 @@ export default function Home() {
           </div>
         </div>
         {/* tasks */}
-        <TaskBoard />
+        <TaskProvider>
+          <TaskBoard />
+        </TaskProvider>
       </main>
       <footer className="flex gap-6 flex-wrap items-center justify-center">
         <a

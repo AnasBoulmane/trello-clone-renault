@@ -13,7 +13,7 @@ export const fetchTasks = async (): Promise<Task[]> => {
   return data
 }
 
-export const addTask = async (newTask: Partial<Task>): Promise<Task | null> => {
+export const createTask = async (newTask: Partial<Task>): Promise<Task | null> => {
   const response = await fetch(`${BASE_URL}/users/1/todos`, {
     method: 'POST',
     body: JSON.stringify({

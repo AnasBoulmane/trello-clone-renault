@@ -1,6 +1,6 @@
 // lib/api.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchTasks, addTask } from './api'
+import { fetchTasks, createTask } from './api'
 
 describe('API Functions', () => {
   const API_BASE_URL = 'http://api.example.com'
@@ -54,7 +54,7 @@ describe('API Functions', () => {
         json: () => Promise.resolve(returnedTask),
       })
 
-      const task = await addTask(newTask)
+      const task = await createTask(newTask)
 
       // Verify the response
       expect(task).toEqual(returnedTask)
@@ -83,7 +83,7 @@ describe('API Functions', () => {
         status: 500,
       })
 
-      await expect(addTask(newTask)).rejects.toThrow('HTTP error! status: 500')
+      await expect(createTask(newTask)).rejects.toThrow('HTTP error! status: 500')
     })
   })
 })

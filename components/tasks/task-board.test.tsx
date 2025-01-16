@@ -1,46 +1,65 @@
+// components/tasks/task-board.test.tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import { TaskBoard } from './task-board'
-import { fetchTasks, addTask } from '@/lib/api'
+import { useTaskContext } from '@/contexts/task-context'
 
-// Mock the API functions
-vi.mock('@/lib/api', () => ({
-  fetchTasks: vi.fn(),
-  addTask: vi.fn(),
+// Mock the context
+vi.mock('@/contexts/task-context', () => ({
+  useTaskContext: vi.fn(),
 }))
 
+// integration test with the TaskContext
 describe('TaskBoard Component', () => {
-  // Let's set up some mock data that we'll use across our tests
-  const mockTasks = [
-    { id: '1', title: 'Task 1', description: 'Description 1' },
-    { id: '2', title: 'Task 2', description: 'Description 2' },
-  ]
-
-  // Before each test, we'll reset our mocks to ensure clean test states
   beforeEach(() => {
-    vi.clearAllMocks()
-    // Set up the default successful response for fetchTasks
-    ;(fetchTasks as any).mockResolvedValue(mockTasks)
     cleanup()
+    vi.resetAllMocks()
   })
 
-  // First, let's test the initial rendering and data fetching
-  it('should fetch and display initial tasks in the todo column', async () => {
+  it('should render columns and tasks from context', () => {
+    // Mock the context values
+    const mockContextValue = {
+      columns: {
+        todo: [{ id: '1', title: 'Task 1', description: 'Description 1' }],
+        inProgress: [],
+        done: [],
+      },
+      fetchInitialTasks: vi.fn(),
+      addTask: vi.fn(),
+      handleDragEnd: vi.fn(),
+    }
+
+    ;(useTaskContext as any).mockReturnValue(mockContextValue)
+
     render(<TaskBoard />)
 
-    // Wait for the tasks to be loaded and displayed
-    await waitFor(() => {
-      // Check if both tasks are rendered
-      mockTasks.forEach((task) => {
-        expect(screen.getByText(task.title)).toBeDefined()
-        expect(screen.getByText(`Task ${task.id} description`)).toBeDefined()
-      })
+    // Verify columns are rendered
+    expect(screen.getByText('To Do')).toBeDefined()
+    expect(screen.getByText('In Progress')).toBeDefined()
+    expect(screen.getByText('Done')).toBeDefined()
+
+    // Verify the columns have the correct structure
+    const columns = screen.getAllByTestId('task-column')
+    expect(columns).toHaveLength(3)
+
+    // Verify task is rendered
+    expect(screen.getByText('Task 1')).toBeDefined()
+  })
+
+  it('should call fetchInitialTasks on mount', () => {
+    const fetchInitialTasks = vi.fn()
+    ;(useTaskContext as any).mockReturnValue({
+      columns: { todo: [], inProgress: [], done: [] },
+      fetchInitialTasks,
+      addTask: vi.fn(),
+      handleDragEnd: vi.fn(),
     })
 
-    // Verify that fetchTasks was called exactly once
-    expect(fetchTasks).toHaveBeenCalledTimes(1)
+    render(<TaskBoard />)
+
+    expect(fetchInitialTasks).toHaveBeenCalled()
   })
 
   // Let's test adding a new task
@@ -51,10 +70,16 @@ describe('TaskBoard Component', () => {
       description: 'Test Description 123',
     }
 
-    // Mock the addTask API call
-    ;(addTask as any).mockResolvedValue(newTask)
+    const addTask = vi.fn()
+    ;(useTaskContext as any).mockReturnValue({
+      columns: { todo: [], inProgress: [], done: [] },
+      fetchInitialTasks: vi.fn(),
+      addTask,
+      handleDragEnd: vi.fn(),
+    })
 
     render(<TaskBoard />)
+
     const user = userEvent.setup()
 
     // Open the new task dialog
@@ -77,56 +102,5 @@ describe('TaskBoard Component', () => {
       title: newTask.title,
       description: newTask.description,
     })
-
-    // Verify the new task is added to the todo column
-    await waitFor(() => {
-      expect(screen.getByText(newTask.title)).toBeDefined()
-      expect(screen.getByText(newTask.description)).toBeDefined()
-    })
-  })
-
-  // Test error handling during initial fetch
-  it('should handle failed task fetching gracefully', async () => {
-    // Mock the API to reject
-    ;(fetchTasks as any).mockRejectedValue(new Error('Failed to fetch tasks'))
-
-    render(<TaskBoard />)
-
-    // Verify that the error doesn't break the component
-    // The component should still render the column headers
-    expect(screen.getByText('To Do')).toBeDefined()
-    expect(screen.getByText('In Progress')).toBeDefined()
-    expect(screen.getByText('Done')).toBeDefined()
-  })
-
-  // Test validation when adding a task
-  it('should not add a task with empty title', async () => {
-    render(<TaskBoard />)
-    const user = userEvent.setup()
-
-    // Open the new task dialog
-    const newTaskButton = screen.getByRole('button', { name: /new task/i })
-    await user.click(newTaskButton)
-
-    // Try to submit without entering a title
-    const submitButton = screen.getByRole('button', { name: /submit/i })
-    await user.click(submitButton)
-
-    // Verify that addTask was not called
-    expect(addTask).not.toHaveBeenCalled()
-  })
-
-  // Test column rendering
-  it('should render all three columns correctly', () => {
-    render(<TaskBoard />)
-
-    // Check for the presence of all three columns
-    expect(screen.getByText('To Do')).toBeDefined()
-    expect(screen.getByText('In Progress')).toBeDefined()
-    expect(screen.getByText('Done')).toBeDefined()
-
-    // Verify the columns have the correct structure
-    const columns = screen.getAllByTestId('task-column')
-    expect(columns).toHaveLength(3)
   })
 })

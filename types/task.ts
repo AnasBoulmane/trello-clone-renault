@@ -5,7 +5,7 @@ export type Task = {
   completed?: boolean
 }
 
-export type Columns = {
+export type BoardColumns = {
   todo: Task[]
   inProgress: Task[]
   done: Task[]
