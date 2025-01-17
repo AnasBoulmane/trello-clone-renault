@@ -68,11 +68,11 @@ export function ConfirmationDialog({
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <DialogFooter>
+        <DialogFooter className="flex-row">
           <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
             {cancelText}
           </Button>
-          <Button variant={variant} onClick={handleConfirm} disabled={isLoading}>
+          <Button variant={variant} onClick={handleConfirm} disabled={isLoading} className="flex-1">
             {confirmText}
           </Button>
         </DialogFooter>

@@ -11,24 +11,19 @@ export function TaskToolbar() {
 
   // Handle task creation with the task dialog
   const handleNewTask = async () => {
-    try {
-      const newTask = await taskDialog.openDialog({
-        mode: 'create',
-      })
+    const newTask = await taskDialog.openDialog({
+      mode: 'create',
+    })
 
-      if (newTask) {
-        await addTask(newTask)
-      }
-    } catch (error) {
-      console.error('Error creating task:', error)
-      // todo: Show error message to user
+    if (newTask) {
+      await addTask(newTask)
     }
   }
 
   return (
     <div className="flex items-center justify-between">
-      <Button className="ml-auto px-2 lg:px-3" onClick={handleNewTask}>
-        New Task
+      <Button className="ml-auto px-3" onClick={handleNewTask}>
+        <span className="hidden md:block">New Task</span>
         <Plus />
       </Button>
     </div>

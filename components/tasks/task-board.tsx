@@ -23,7 +23,7 @@ export function TaskBoard() {
   return (
     <div className="space-y-6">
       <TaskToolbar />
-      <div className="flex gap-8">
+      <div className="flex gap-8 flex-wrap md:flex-nowrap">
         <DragDropContext onDragEnd={handleDragEnd}>
           <TaskColumn title="To Do" columnId="todo" tasks={columns.todo} />
           <TaskColumn title="In Progress" columnId="inProgress" tasks={columns.inProgress} />

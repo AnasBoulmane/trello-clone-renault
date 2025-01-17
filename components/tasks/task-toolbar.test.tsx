@@ -82,26 +82,4 @@ describe('TaskToolbar Component', () => {
     // Verify addTask was not called
     expect(mockAddTask).not.toHaveBeenCalled()
   })
-
-  it('should handle task creation errors gracefully', async () => {
-    mockOpenDialog.mockResolvedValueOnce(mockTask)
-    mockAddTask.mockRejectedValueOnce(new Error('Failed to create task'))
-
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    render(<TaskToolbar />)
-    const user = userEvent.setup()
-
-    await user.click(screen.getByRole('button', { name: /new task/i }))
-
-    // Verify the dialog was opened
-    expect(mockOpenDialog).toHaveBeenCalledWith({
-      mode: 'create',
-    })
-
-    // Verify error was logged
-    expect(consoleErrorSpy).toHaveBeenCalledOnce()
-
-    consoleErrorSpy.mockRestore()
-  })
 })

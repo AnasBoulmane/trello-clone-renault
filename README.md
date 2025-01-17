@@ -1,8 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Modern Task Management Application
 
-## Getting Started
+A simple task management application built with Next.js 15, demonstrating modern web development practices, state management patterns, and interactive UI design. This project showcases professional-grade React development with TypeScript, featuring drag-and-drop capabilities, persistent storage, and comprehensive testing.
 
-First, run the development server:
+## 🚀 Technical Highlights
+
+This project demonstrates expertise in modern web development through:
+
+- **Next.js 15**: Leveraging the latest features of Next.js for optimal performance and developer experience
+- **TypeScript**: Full type safety across the entire application
+- **Zustand**: State management with persistence
+- **Drag and Drop**: Intuitive task management using @hello-pangea/dnd
+- **Shadcn/UI**: Modern, accessible component library
+- **Testing**: Comprehensive testing suite using Vitest
+- **Tailwind CSS**: Utility-first styling with consistent design patterns
+
+## 🏃‍♂️ Getting Started
+
+### Prerequisites
+
+- Node.js 18.17 or later
+- npm or yarn or pnpm
+- Git
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/task-management-app.git
+cd task-management-app
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+3. Set up environment variables:
+
+```bash
+cp env.example .env.local
+```
+
+4. Start the development server:
 
 ```bash
 npm run dev
@@ -10,27 +55,117 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🎯 Key Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The application provides a robust task management experience with:
 
-## Learn More
+- Drag-and-drop task organization across status columns
+- Persistent state management with localStorage
+- Optimistic updates for smooth user experience
+- Responsive design for all device sizes
+- Accessible component design
+- Real-time task updates
+- Error handling and recovery
+- Form validation
 
-To learn more about Next.js, take a look at the following resources:
+## 🏗 Architecture & Design Choices
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### State Management
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+We chose Zustand over other state management solutions for its:
 
-## Deploy on Vercel
+- Minimal boilerplate compared to Redux
+- Built-in persistence capabilities
+- TypeScript-first approach
+- Excellent developer experience
+- Simple integration with React hooks
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Component Architecture
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The application follows a clear component hierarchy:
+
+- TaskBoard: Main orchestrator component
+- TaskColumn: Status-specific task containers
+- TaskCard: Individual task representation
+- TaskToolbar: User controls and actions
+
+### Testing Strategy
+
+Our testing approach ensures reliability through:
+
+- Component unit tests
+- Integration tests for user workflows
+- Mocked API interactions
+- State management tests
+
+### API Integration
+
+The backend integration demonstrates:
+
+- Clean separation of concerns
+- Type-safe API calls
+- Error handling patterns
+- Optimistic updates
+- Data synchronization
+
+## 🔄 Development Workflow
+
+### Running Tests
+
+```bash
+npm test
+# or
+yarn test
+# or
+pnpm test
+```
+
+### Building for Production
+
+```bash
+npm run build
+# or
+yarn build
+# or
+pnpm build
+```
+
+## 🔜 Future Improvements
+
+We have several planned enhancements:
+
+1. Integration with real-time updates using WebSockets
+2. Enhanced task filtering and search capabilities
+3. Team collaboration features
+4. Advanced task analytics and reporting
+5. Integration with calendar systems
+6. Performance optimizations for large task sets (virtualization)
+7. Enhanced offline capabilities
+
+## 🚧 Known Limitations
+
+Current limitations include:
+
+1. Limited to local storage persistence as jsonplaceholder API is read-only
+2. Basic task management features only
+3. No real-time collaboration yet
+4. No authentication system yet
+
+## 🔍 For Job Seekers
+
+This project demonstrates several key skills valued by employers:
+
+1. Modern React development practices
+2. State management expertise
+3. Testing proficiency
+4. TypeScript mastery
+5. Clean code principles
+6. UI/UX considerations
+7. Performance optimization
+8. Error handling patterns
+
+The codebase showcases professional-grade development practices and architecture decisions that translate directly to enterprise applications.

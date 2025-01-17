@@ -13,7 +13,10 @@ type TaskColumnProps = {
 export function TaskColumn({ columnId, title, tasks }: TaskColumnProps) {
   return (
     <div
-      className="w-1/3 flex flex-col rounded-lg p-2 transition-colors duration-200 bg-gray-100"
+      className={cn(
+        'flex flex-col rounded-lg p-2 transition-colors duration-200 bg-gray-100',
+        'w-full min-h-[calc(100vh-15rem)] md:min-h-[calc(100vh-13rem)] md:w-1/3'
+      )}
       data-testid="task-column"
       data-column-id={columnId}
     >

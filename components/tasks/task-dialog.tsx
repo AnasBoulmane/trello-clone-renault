@@ -46,7 +46,7 @@ export function TaskDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {children}
-      <DialogContent className="sm:max-w-[425px] sm:top-[50%] sm:translate-y-[-50%] sm:bottom-auto top-auto translate-y-0 bottom-0">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
