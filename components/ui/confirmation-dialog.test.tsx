@@ -103,7 +103,7 @@ describe('ConfirmationDialog', () => {
   })
 
   it('applies destructive variant styling', () => {
-    const { container } = render(<ConfirmationDialog {...defaultProps} variant="destructive" />)
+    render(<ConfirmationDialog {...defaultProps} variant="destructive" />)
 
     const confirmButton = screen.getByText('Confirm')
     expect(confirmButton.classList).toContain('bg-destructive')

@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TaskDialog } from './task-dialog'
-import { Button } from '../ui/button'
-import { DialogTrigger } from '../ui/dialog'
 
 describe('TaskDialog', () => {
   const defaultProps = {
@@ -13,8 +11,6 @@ describe('TaskDialog', () => {
     onCancel: vi.fn(),
     mode: 'create' as const,
   }
-
-  const mockOnSubmit = vi.fn(() => Promise.resolve())
 
   beforeEach(() => {
     vi.clearAllMocks()
