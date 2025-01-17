@@ -5,9 +5,9 @@ import { DraggableProvided } from '@hello-pangea/dnd'
 import { Task } from '@/types/task'
 import { cn } from '@/lib/utils'
 import { Card, CardHeader, CardContent } from '../ui/card'
-import { useTaskContext } from '@/contexts/task-context'
 import { useConfirmation } from '@/contexts/confirmation-context'
 import { useTaskDialog } from '@/contexts/task-dialog-context'
+import { useTaskStore } from '@/stores/use-task-store'
 
 type TaskCardProps = {
   task: Task
@@ -16,7 +16,7 @@ type TaskCardProps = {
 }
 
 export function TaskCard({ task, provided, isDragging }: TaskCardProps) {
-  const { updateTask, deleteTask } = useTaskContext()
+  const { updateTask, deleteTask } = useTaskStore()
   const confirmation = useConfirmation()
   const taskDialog = useTaskDialog()
 

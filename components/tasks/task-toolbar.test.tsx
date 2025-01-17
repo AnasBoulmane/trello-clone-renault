@@ -3,12 +3,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TaskToolbar } from './task-toolbar'
-import { useTaskContext } from '@/contexts/task-context'
 import { useTaskDialog } from '@/contexts/task-dialog-context'
+import { useTaskStore } from '@/stores/use-task-store'
 
 // Mock the contexts
-vi.mock('@/contexts/task-context', () => ({
-  useTaskContext: vi.fn(),
+vi.mock('@/stores/use-task-store', () => ({
+  useTaskStore: vi.fn(),
 }))
 
 vi.mock('@/contexts/task-dialog-context', () => ({
@@ -31,7 +31,7 @@ describe('TaskToolbar Component', () => {
     vi.resetAllMocks()
 
     // Setup context mocks
-    ;(useTaskContext as any).mockReturnValue({
+    ;(useTaskStore as any).mockReturnValue({
       addTask: mockAddTask,
     })
     ;(useTaskDialog as any).mockReturnValue({

@@ -3,7 +3,6 @@ import Image from 'next/image'
 import { TaskBoard } from '@/components/tasks/task-board'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ConfirmationProvider } from '@/contexts/confirmation-context'
-import { TaskProvider } from '@/contexts/task-context'
 import { TaskDialogProvider } from '@/contexts/task-dialog-context'
 
 export default function Home() {
@@ -27,11 +26,9 @@ export default function Home() {
         </div>
         {/* tasks */}
         <ConfirmationProvider>
-          <TaskProvider>
-            <TaskDialogProvider>
-              <TaskBoard />
-            </TaskDialogProvider>
-          </TaskProvider>
+          <TaskDialogProvider>
+            <TaskBoard />
+          </TaskDialogProvider>
         </ConfirmationProvider>
       </main>
       <footer className="flex gap-6 flex-wrap items-center justify-center">

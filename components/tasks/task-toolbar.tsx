@@ -2,11 +2,11 @@
 import { Plus } from 'lucide-react'
 
 import { Button } from '../ui/button'
-import { useTaskContext } from '@/contexts/task-context'
 import { useTaskDialog } from '@/contexts/task-dialog-context'
+import { useTaskStore } from '@/stores/use-task-store'
 
 export function TaskToolbar() {
-  const { addTask } = useTaskContext()
+  const { addTask } = useTaskStore()
   const taskDialog = useTaskDialog()
 
   // Handle task creation with the task dialog

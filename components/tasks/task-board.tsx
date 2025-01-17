@@ -5,7 +5,7 @@ import { DragDropContext } from '@hello-pangea/dnd'
 
 import { TaskToolbar } from './task-toolbar'
 import { TaskColumn } from './task-column'
-import { useTaskContext } from '@/contexts/task-context'
+import { useTaskStore } from '@/stores/use-task-store'
 
 /**
  * TaskBoard Component: the entry point for the task board exercise.
@@ -13,7 +13,7 @@ import { useTaskContext } from '@/contexts/task-context'
  * using a state management library like redux or zustand for better state management.
  **/
 export function TaskBoard() {
-  const { columns, fetchInitialTasks, handleDragEnd, addTask } = useTaskContext()
+  const { columns, fetchInitialTasks, handleDragEnd } = useTaskStore()
 
   useEffect(() => {
     // Todo add loading state and probably using react-query for better data fetching

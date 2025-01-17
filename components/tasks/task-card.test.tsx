@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TaskCard } from './task-card'
-import { useTaskContext } from '@/contexts/task-context'
 import { useConfirmation } from '@/contexts/confirmation-context'
 import { useTaskDialog } from '@/contexts/task-dialog-context'
+import { useTaskStore } from '@/stores/use-task-store'
 
 // Mock all required contexts
-vi.mock('@/contexts/task-context', () => ({
-  useTaskContext: vi.fn(),
+vi.mock('@/stores/use-task-store', () => ({
+  useTaskStore: vi.fn(),
 }))
 
 vi.mock('@/contexts/confirmation-context', () => ({
@@ -42,7 +42,7 @@ describe('TaskCard Component', () => {
     cleanup()
     vi.resetAllMocks()
     // Setup context mocks
-    ;(useTaskContext as any).mockReturnValue({
+    ;(useTaskStore as any).mockReturnValue({
       updateTask: mockUpdateTask,
       deleteTask: mockDeleteTask,
     })

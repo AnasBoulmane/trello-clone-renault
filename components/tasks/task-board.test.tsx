@@ -1,35 +1,31 @@
-// components/tasks/task-board.test.tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 
 import { TaskBoard } from './task-board'
-import { useTaskContext } from '@/contexts/task-context'
-import { useTaskDialog } from '@/contexts/task-dialog-context'
+import { useTaskStore } from '@/stores/use-task-store'
 
-// Mock all required contexts
-vi.mock('@/contexts/task-context', () => ({
-  useTaskContext: vi.fn(),
-}))
-
-vi.mock('@/contexts/confirmation-context', () => ({
-  useConfirmation: vi.fn(),
+// Mock the Zustand store
+vi.mock('@/stores/use-task-store', () => ({
+  useTaskStore: vi.fn(),
 }))
 
 vi.mock('@/contexts/task-dialog-context', () => ({
   useTaskDialog: vi.fn(),
 }))
 
-// integration test with the TaskContext
+vi.mock('@/contexts/confirmation-context', () => ({
+  useConfirmation: vi.fn(),
+}))
+
 describe('TaskBoard Component', () => {
   beforeEach(() => {
     cleanup()
     vi.resetAllMocks()
   })
 
-  it('should render columns and tasks from context', () => {
-    // Mock the context values
-    const mockContextValue = {
+  it('should render columns and tasks from store', () => {
+    // Mock the store values
+    const mockStoreValue = {
       columns: {
         todo: [{ id: '1', title: 'Task 1', description: 'Description 1' }],
         inProgress: [],
@@ -40,7 +36,7 @@ describe('TaskBoard Component', () => {
       handleDragEnd: vi.fn(),
     }
 
-    ;(useTaskContext as any).mockReturnValue(mockContextValue)
+    ;(useTaskStore as any).mockReturnValue(mockStoreValue)
 
     render(<TaskBoard />)
 
@@ -59,60 +55,14 @@ describe('TaskBoard Component', () => {
 
   it('should call fetchInitialTasks on mount', () => {
     const fetchInitialTasks = vi.fn()
-    ;(useTaskContext as any).mockReturnValue({
+    ;(useTaskStore as any).mockReturnValue({
       columns: { todo: [], inProgress: [], done: [] },
       fetchInitialTasks,
-      addTask: vi.fn(),
       handleDragEnd: vi.fn(),
     })
 
     render(<TaskBoard />)
 
     expect(fetchInitialTasks).toHaveBeenCalled()
-  })
-
-  // Let's test adding a new task
-  it('should add a new task to the todo column', async () => {
-    const newTask = {
-      id: 3,
-      title: 'Test Task 123',
-      description: 'Test Description 123',
-    }
-
-    const addTask = vi.fn()
-    const mockOpenDialog = vi.fn()
-    ;(useTaskContext as any).mockReturnValue({
-      columns: { todo: [], inProgress: [], done: [] },
-      fetchInitialTasks: vi.fn(),
-      addTask,
-      handleDragEnd: vi.fn(),
-    })
-    ;(useTaskDialog as any).mockReturnValue({
-      openDialog: mockOpenDialog,
-    })
-
-    render(<TaskBoard />)
-
-    mockOpenDialog.mockResolvedValueOnce({
-      title: newTask.title,
-      description: newTask.description,
-    })
-
-    const user = userEvent.setup()
-
-    // Open the new task dialog
-    const newTaskButton = screen.getByRole('button', { name: /new task/i })
-    await user.click(newTaskButton)
-
-    // Verify the dialog was opened
-    expect(mockOpenDialog).toHaveBeenCalledWith({
-      mode: 'create',
-    })
-
-    // Verify the API was called correctly
-    expect(addTask).toHaveBeenCalledWith({
-      title: newTask.title,
-      description: newTask.description,
-    })
   })
 })
