@@ -5,14 +5,19 @@ import userEvent from '@testing-library/user-event'
 
 import { TaskBoard } from './task-board'
 import { useTaskContext } from '@/contexts/task-context'
-import { useConfirmation } from '@/contexts/confirmation-context'
+import { useTaskDialog } from '@/contexts/task-dialog-context'
 
-// Mock the context
+// Mock all required contexts
 vi.mock('@/contexts/task-context', () => ({
   useTaskContext: vi.fn(),
 }))
+
 vi.mock('@/contexts/confirmation-context', () => ({
   useConfirmation: vi.fn(),
+}))
+
+vi.mock('@/contexts/task-dialog-context', () => ({
+  useTaskDialog: vi.fn(),
 }))
 
 // integration test with the TaskContext
@@ -75,14 +80,23 @@ describe('TaskBoard Component', () => {
     }
 
     const addTask = vi.fn()
+    const mockOpenDialog = vi.fn()
     ;(useTaskContext as any).mockReturnValue({
       columns: { todo: [], inProgress: [], done: [] },
       fetchInitialTasks: vi.fn(),
       addTask,
       handleDragEnd: vi.fn(),
     })
+    ;(useTaskDialog as any).mockReturnValue({
+      openDialog: mockOpenDialog,
+    })
 
     render(<TaskBoard />)
+
+    mockOpenDialog.mockResolvedValueOnce({
+      title: newTask.title,
+      description: newTask.description,
+    })
 
     const user = userEvent.setup()
 
@@ -90,16 +104,10 @@ describe('TaskBoard Component', () => {
     const newTaskButton = screen.getByRole('button', { name: /new task/i })
     await user.click(newTaskButton)
 
-    // Fill in the task form
-    const titleInput = screen.getByTestId('title-input')
-    const descriptionInput = screen.getByTestId('description-input')
-
-    await user.type(titleInput, newTask.title)
-    await user.type(descriptionInput, newTask.description)
-
-    // Submit the form
-    const submitButton = screen.getByRole('button', { name: /submit/i })
-    await user.click(submitButton)
+    // Verify the dialog was opened
+    expect(mockOpenDialog).toHaveBeenCalledWith({
+      mode: 'create',
+    })
 
     // Verify the API was called correctly
     expect(addTask).toHaveBeenCalledWith({

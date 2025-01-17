@@ -4,11 +4,10 @@ import { DraggableProvided } from '@hello-pangea/dnd'
 
 import { Task } from '@/types/task'
 import { cn } from '@/lib/utils'
+import { Card, CardHeader, CardContent } from '../ui/card'
 import { useTaskContext } from '@/contexts/task-context'
 import { useConfirmation } from '@/contexts/confirmation-context'
-import { Card, CardHeader, CardContent } from '../ui/card'
-import { DialogTrigger } from '../ui/dialog'
-import { TaskDialog } from './task-dialog'
+import { useTaskDialog } from '@/contexts/task-dialog-context'
 
 type TaskCardProps = {
   task: Task
@@ -19,6 +18,7 @@ type TaskCardProps = {
 export function TaskCard({ task, provided, isDragging }: TaskCardProps) {
   const { updateTask, deleteTask } = useTaskContext()
   const confirmation = useConfirmation()
+  const taskDialog = useTaskDialog()
 
   // Handle task deletion with confirmation
   const handleDelete = async () => {
@@ -31,6 +31,18 @@ export function TaskCard({ task, provided, isDragging }: TaskCardProps) {
 
     if (confirmed) {
       await deleteTask(task.id)
+    }
+  }
+
+  // Handle task editing
+  const handleEdit = async () => {
+    const updatedTask = await taskDialog.openDialog({
+      mode: 'edit',
+      initialValues: task,
+    })
+
+    if (updatedTask) {
+      await updateTask(updatedTask)
     }
   }
 
@@ -51,22 +63,20 @@ export function TaskCard({ task, provided, isDragging }: TaskCardProps) {
         <div className="font-medium flex-1">{task.title}</div>
         <button
           role="button"
-          tabIndex={0}
-          className="flex self-start "
+          className="flex self-start opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={handleDelete}
           data-testid="delete-task"
         >
-          <Trash className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <Trash className="w-4 h-4 text-gray-400" />
         </button>
-
-        <TaskDialog onSubmit={updateTask} mode="edit" initialValues={task}>
-          <DialogTrigger asChild>
-            <Pencil
-              className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
-              data-testid="edit-task"
-            />
-          </DialogTrigger>
-        </TaskDialog>
+        <button
+          role="button"
+          className="flex self-start opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={handleEdit}
+          data-testid="edit-task"
+        >
+          <Pencil className="w-4 h-4 text-gray-400 " />
+        </button>
         <GripVertical className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
       </CardHeader>
       {task.description && (

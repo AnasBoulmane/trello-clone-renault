@@ -4,6 +4,7 @@ import { TaskBoard } from '@/components/tasks/task-board'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ConfirmationProvider } from '@/contexts/confirmation-context'
 import { TaskProvider } from '@/contexts/task-context'
+import { TaskDialogProvider } from '@/contexts/task-dialog-context'
 
 export default function Home() {
   return (
@@ -27,7 +28,9 @@ export default function Home() {
         {/* tasks */}
         <ConfirmationProvider>
           <TaskProvider>
-            <TaskBoard />
+            <TaskDialogProvider>
+              <TaskBoard />
+            </TaskDialogProvider>
           </TaskProvider>
         </ConfirmationProvider>
       </main>

@@ -6,6 +6,14 @@ import { Button } from '../ui/button'
 import { DialogTrigger } from '../ui/dialog'
 
 describe('TaskDialog', () => {
+  const defaultProps = {
+    open: true,
+    onOpenChange: vi.fn(),
+    onSubmit: vi.fn(() => Promise.resolve()),
+    onCancel: vi.fn(),
+    mode: 'create' as const,
+  }
+
   const mockOnSubmit = vi.fn(() => Promise.resolve())
 
   beforeEach(() => {
@@ -14,111 +22,74 @@ describe('TaskDialog', () => {
   })
 
   describe('Create Mode', () => {
-    it('should render create dialog with proper title and description', async () => {
-      render(
-        <TaskDialog mode="create" onSubmit={mockOnSubmit}>
-          <DialogTrigger asChild>
-            <Button>Open Dialog</Button>
-          </DialogTrigger>
-        </TaskDialog>
-      )
-
-      const user = userEvent.setup()
-      await user.click(screen.getByRole('button'))
+    it('should render create dialog with proper title and description', () => {
+      render(<TaskDialog {...defaultProps} />)
 
       expect(screen.getByText('Create new task')).toBeDefined()
       expect(screen.getByText(/Describe your task in detail/)).toBeDefined()
     })
 
-    it('should handle task creation', async () => {
-      const newTask = {
-        title: 'New Task',
-        description: 'Task Description',
-      }
+    it('should handle task creation and close dialog', async () => {
+      const mockOnSubmit = vi.fn(() => Promise.resolve())
+      const mockOnOpenChange = vi.fn()
 
       render(
-        <TaskDialog mode="create" onSubmit={mockOnSubmit}>
-          <DialogTrigger asChild>
-            <Button>Open Dialog</Button>
-          </DialogTrigger>
-        </TaskDialog>
+        <TaskDialog {...defaultProps} onSubmit={mockOnSubmit} onOpenChange={mockOnOpenChange} />
       )
 
       const user = userEvent.setup()
-      await user.click(screen.getByRole('button'))
 
       // Fill the form
-      await user.type(screen.getByTestId('title-input'), newTask.title)
-      await user.type(screen.getByTestId('description-input'), newTask.description)
+      await user.type(screen.getByTestId('title-input'), 'New Task')
+      await user.type(screen.getByTestId('description-input'), 'Description')
 
       // Submit the form
       await user.click(screen.getByRole('button', { name: /submit/i }))
 
-      expect(mockOnSubmit).toHaveBeenCalledWith(newTask)
-      await waitFor(() => {
-        expect(screen.queryByText('Create new task')).toBeNull()
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        title: 'New Task',
+        description: 'Description',
       })
+      expect(mockOnOpenChange).toHaveBeenCalledWith(false)
     })
   })
 
   describe('Edit Mode', () => {
-    const existingTask = {
+    const mockTask = {
       id: 1,
-      title: 'Existing Task',
-      description: 'Existing Description',
+      title: 'Test Task',
+      description: 'Test Description',
+      status: 'todo' as const,
     }
 
-    it('should render edit dialog with proper title and description', async () => {
-      render(
-        <TaskDialog mode="edit" onSubmit={mockOnSubmit} initialValues={existingTask}>
-          <DialogTrigger asChild>
-            <Button>Edit Task</Button>
-          </DialogTrigger>
-        </TaskDialog>
-      )
+    const editProps = {
+      ...defaultProps,
+      mode: 'edit' as const,
+      initialValues: mockTask,
+    }
 
-      const user = userEvent.setup()
-      await user.click(screen.getByRole('button'))
+    it('should render edit dialog with proper title and description', () => {
+      render(<TaskDialog {...editProps} />)
 
       expect(screen.getByText('Edit task')).toBeDefined()
       expect(screen.getByText(/Update your task details/)).toBeDefined()
     })
 
-    it('should pre-fill form with existing task data', async () => {
-      render(
-        <TaskDialog mode="edit" onSubmit={mockOnSubmit} initialValues={existingTask}>
-          <DialogTrigger asChild>
-            <Button>Edit Task</Button>
-          </DialogTrigger>
-        </TaskDialog>
-      )
+    it('should pre-fill form with existing task data', () => {
+      render(<TaskDialog {...editProps} />)
 
-      const user = userEvent.setup()
-      await user.click(screen.getByRole('button'))
-
-      expect((screen.getByTestId('title-input') as HTMLInputElement).value).toBe(existingTask.title)
+      expect((screen.getByTestId('title-input') as HTMLInputElement).value).toBe(mockTask.title)
       expect((screen.getByTestId('description-input') as HTMLInputElement).value).toBe(
-        existingTask.description
+        mockTask.description
       )
     })
 
-    it('should handle task update', async () => {
-      const updatedTask = {
-        ...existingTask,
-        title: 'Updated Task',
-        description: 'Updated Description',
-      }
+    it('should handle task update with initial values', async () => {
+      const mockOnSubmit = vi.fn(() => Promise.resolve())
 
-      render(
-        <TaskDialog mode="edit" onSubmit={mockOnSubmit} initialValues={existingTask}>
-          <DialogTrigger asChild>
-            <Button>Edit Task</Button>
-          </DialogTrigger>
-        </TaskDialog>
-      )
+      render(<TaskDialog {...editProps} onSubmit={mockOnSubmit} />)
 
       const user = userEvent.setup()
-      await user.click(screen.getByRole('button'))
 
       // Update form fields
       const titleInput = screen.getByTestId('title-input')
@@ -126,45 +97,48 @@ describe('TaskDialog', () => {
 
       await user.clear(titleInput)
       await user.clear(descriptionInput)
-      await user.type(titleInput, updatedTask.title)
-      await user.type(descriptionInput, updatedTask.description)
+      await user.type(titleInput, 'Updated Task')
+      await user.type(descriptionInput, 'Updated Description')
 
       // Submit the form
       await user.click(screen.getByRole('button', { name: /submit/i }))
 
       expect(mockOnSubmit).toHaveBeenCalledWith({
-        ...existingTask,
-        title: updatedTask.title,
-        description: updatedTask.description,
+        ...mockTask,
+        title: 'Updated Task',
+        description: 'Updated Description',
       })
     })
   })
 
-  describe('Error Handling', () => {
-    it('should handle submission errors', async () => {
-      const mockError = new Error('Update failed')
-      const mockOnSubmitWithError = vi.fn(() => Promise.reject(mockError))
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  describe('Dialog Controls', () => {
+    it('should call onCancel and close dialog when cancelled', async () => {
+      const mockOnCancel = vi.fn()
+      const mockOnOpenChange = vi.fn()
 
       render(
-        <TaskDialog mode="create" onSubmit={mockOnSubmitWithError}>
-          <DialogTrigger asChild>
-            <Button>Open Dialog</Button>
-          </DialogTrigger>
-        </TaskDialog>
+        <TaskDialog {...defaultProps} onCancel={mockOnCancel} onOpenChange={mockOnOpenChange} />
       )
 
       const user = userEvent.setup()
-      await user.click(screen.getByRole('button'))
+      await user.click(screen.getByRole('button', { name: /cancel/i }))
 
-      // Fill and submit form
-      await user.type(screen.getByTestId('title-input'), 'Test Task')
+      expect(mockOnCancel).toHaveBeenCalled()
+      expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+    })
+
+    it('should handle submission errors gracefully', async () => {
+      const mockError = new Error('Submission failed')
+      const mockOnSubmit = vi.fn(() => Promise.reject(mockError))
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      render(<TaskDialog {...defaultProps} onSubmit={mockOnSubmit} />)
+
+      const user = userEvent.setup()
+      await user.type(screen.getByTestId('title-input'), 'Test')
       await user.click(screen.getByRole('button', { name: /submit/i }))
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Error'), mockError)
-
-      // Dialog should remain open after error
-      expect(screen.getByText('Create new task')).toBeDefined()
 
       consoleErrorSpy.mockRestore()
     })

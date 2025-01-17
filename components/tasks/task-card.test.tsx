@@ -4,13 +4,19 @@ import userEvent from '@testing-library/user-event'
 import { TaskCard } from './task-card'
 import { useTaskContext } from '@/contexts/task-context'
 import { useConfirmation } from '@/contexts/confirmation-context'
+import { useTaskDialog } from '@/contexts/task-dialog-context'
 
-// Mock the context
+// Mock all required contexts
 vi.mock('@/contexts/task-context', () => ({
   useTaskContext: vi.fn(),
 }))
+
 vi.mock('@/contexts/confirmation-context', () => ({
   useConfirmation: vi.fn(),
+}))
+
+vi.mock('@/contexts/task-dialog-context', () => ({
+  useTaskDialog: vi.fn(),
 }))
 
 describe('TaskCard Component', () => {
@@ -30,6 +36,7 @@ describe('TaskCard Component', () => {
   const mockUpdateTask = vi.fn()
   const mockDeleteTask = vi.fn()
   const mockConfirm = vi.fn()
+  const mockOpenDialog = vi.fn()
 
   beforeEach(() => {
     cleanup()
@@ -42,8 +49,12 @@ describe('TaskCard Component', () => {
     ;(useConfirmation as any).mockReturnValue({
       confirm: mockConfirm,
     })
+    ;(useTaskDialog as any).mockReturnValue({
+      openDialog: mockOpenDialog,
+    })
   })
 
+  // Existing tests remain unchanged...
   it('should render task details correctly', () => {
     render(<TaskCard task={mockTask} provided={mockProvided} isDragging={false} />)
 
@@ -51,34 +62,54 @@ describe('TaskCard Component', () => {
     expect(screen.getByText(mockTask.description)).toBeDefined()
   })
 
-  it('should show edit button on hover', async () => {
+  it('should show edit/delete button on hover', async () => {
     render(<TaskCard task={mockTask} provided={mockProvided} isDragging={false} />)
-    const user = userEvent.setup()
-
-    // The edit button should initially be invisible (opacity-0)
     const editButton = screen.getByTestId('edit-task')
+    const deleteButton = screen.getByTestId('delete-task')
     expect(editButton.classList).toContain('opacity-0')
-
-    // Hover should make it visible
-    await user.hover(editButton.parentElement!)
+    expect(deleteButton.classList).toContain('opacity-0')
     expect(editButton.classList).toContain('group-hover:opacity-100')
+    expect(deleteButton.classList).toContain('group-hover:opacity-100')
   })
 
+  // Updated test for edit functionality
   it('should open edit dialog when edit button is clicked', async () => {
+    const updatedTask = { ...mockTask, title: 'Updated Title' }
+    mockOpenDialog.mockResolvedValueOnce(updatedTask)
+
     render(<TaskCard task={mockTask} provided={mockProvided} isDragging={false} />)
     const user = userEvent.setup()
 
     await user.click(screen.getByTestId('edit-task'))
 
-    expect(screen.getByText('Edit task')).toBeDefined()
-    expect((screen.getByTestId('title-input') as HTMLInputElement).value).toBe(mockTask.title)
-    expect((screen.getByTestId('description-input') as HTMLInputElement).value).toBe(
-      mockTask.description
-    )
+    expect(mockOpenDialog).toHaveBeenCalledWith({
+      mode: 'edit',
+      initialValues: mockTask,
+    })
+
+    // Verify that updateTask was called with the dialog result
+    expect(mockUpdateTask).toHaveBeenCalledWith(updatedTask)
+  })
+
+  it('should not update task when edit dialog is cancelled', async () => {
+    mockOpenDialog.mockResolvedValueOnce(undefined)
+
+    render(<TaskCard task={mockTask} provided={mockProvided} isDragging={false} />)
+    const user = userEvent.setup()
+
+    await user.click(screen.getByTestId('edit-task'))
+
+    expect(mockOpenDialog).toHaveBeenCalledWith({
+      mode: 'edit',
+      initialValues: mockTask,
+    })
+
+    // Verify that updateTask was not called
+    expect(mockUpdateTask).not.toHaveBeenCalled()
   })
 
   it('handles task deletion with confirmation', async () => {
-    mockConfirm.mockResolvedValueOnce(true) // User confirms deletion
+    mockConfirm.mockResolvedValueOnce(true)
 
     render(<TaskCard task={mockTask} provided={mockProvided} isDragging={false} />)
 
@@ -87,7 +118,6 @@ describe('TaskCard Component', () => {
 
     await user.click(deleteButton)
 
-    // Verify confirmation dialog was shown with correct options
     expect(mockConfirm).toHaveBeenCalledWith({
       title: 'Delete Task',
       description: 'Are you sure you want to delete this task? This action cannot be undone.',
@@ -95,12 +125,11 @@ describe('TaskCard Component', () => {
       variant: 'destructive',
     })
 
-    // Verify delete was called
     expect(mockDeleteTask).toHaveBeenCalledWith(mockTask.id)
   })
 
   it('does not delete task when confirmation is cancelled', async () => {
-    mockConfirm.mockResolvedValueOnce(false) // User cancels deletion
+    mockConfirm.mockResolvedValueOnce(false)
 
     render(<TaskCard task={mockTask} provided={mockProvided} isDragging={false} />)
 
@@ -109,9 +138,7 @@ describe('TaskCard Component', () => {
 
     await user.click(deleteButton)
 
-    // Verify confirmation was shown
     expect(mockConfirm).toHaveBeenCalled()
-    // Verify delete was not called
     expect(mockDeleteTask).not.toHaveBeenCalled()
   })
 })

@@ -1,26 +1,36 @@
 'use client'
 import { Plus } from 'lucide-react'
 
-import { DialogTrigger } from '../ui/dialog'
 import { Button } from '../ui/button'
-import { Task } from '@/types/task'
-import { TaskDialog } from './task-dialog'
+import { useTaskContext } from '@/contexts/task-context'
+import { useTaskDialog } from '@/contexts/task-dialog-context'
 
-type TaskToolbarProps = {
-  onTaskCreate: (task: Partial<Task>) => Promise<void>
-}
+export function TaskToolbar() {
+  const { addTask } = useTaskContext()
+  const taskDialog = useTaskDialog()
 
-export function TaskToolbar({ onTaskCreate }: TaskToolbarProps) {
+  // Handle task creation with the task dialog
+  const handleNewTask = async () => {
+    try {
+      const newTask = await taskDialog.openDialog({
+        mode: 'create',
+      })
+
+      if (newTask) {
+        await addTask(newTask)
+      }
+    } catch (error) {
+      console.error('Error creating task:', error)
+      // todo: Show error message to user
+    }
+  }
+
   return (
     <div className="flex items-center justify-between">
-      <TaskDialog onSubmit={onTaskCreate} mode="create">
-        <DialogTrigger asChild>
-          <Button className="ml-auto px-2 lg:px-3">
-            New Task
-            <Plus />
-          </Button>
-        </DialogTrigger>
-      </TaskDialog>
+      <Button className="ml-auto px-2 lg:px-3" onClick={handleNewTask}>
+        New Task
+        <Plus />
+      </Button>
     </div>
   )
 }
