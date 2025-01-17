@@ -1,6 +1,6 @@
 //contexts/confirmation-context.test.tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, renderHook, screen, cleanup } from '@testing-library/react'
+import { render, renderHook, screen, cleanup, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ConfirmationProvider, useConfirmation } from './confirmation-context'
 
@@ -43,9 +43,11 @@ describe('ConfirmationContext', () => {
 
     const button = screen.getByText('Show Dialog')
     await userEvent.click(button)
-
-    // Dialog should be visible with the provided title
-    expect(screen.getByText('Test Title')).toBeDefined()
+    // Wait for the dialog and its content
+    await waitFor(async () => {
+      // Dialog should be visible with the provided title
+      expect(screen.getByText('Test Title')).toBeDefined()
+    })
   })
 
   it('should resolve true when confirmed', async () => {
@@ -70,16 +72,17 @@ describe('ConfirmationContext', () => {
     // Show the dialog
     const button = screen.getByText('Show Dialog')
     await userEvent.click(button)
+    await waitFor(async () => {
+      // Click the confirm button
+      const confirmButton = screen.getByRole('button', { name: /confirm/i })
+      await userEvent.click(confirmButton)
 
-    // Click the confirm button
-    const confirmButton = screen.getByRole('button', { name: /confirm/i })
-    await userEvent.click(confirmButton)
+      // Verify the promise resolved to true
+      expect(confirmationResult).toBe(true)
 
-    // Verify the promise resolved to true
-    expect(confirmationResult).toBe(true)
-
-    // Dialog should be closed
-    expect(screen.queryByText('Confirm Test')).toBeNull()
+      // Dialog should be closed
+      expect(screen.queryByText('Confirm Test')).toBeNull()
+    })
   })
 
   it('should resolve false when cancelled', async () => {
@@ -103,16 +106,17 @@ describe('ConfirmationContext', () => {
     // Show the dialog
     const button = screen.getByText('Show Dialog')
     await userEvent.click(button)
+    await waitFor(async () => {
+      // Click the cancel button
+      const cancelButton = screen.getByRole('button', { name: /cancel/i })
+      await userEvent.click(cancelButton)
 
-    // Click the cancel button
-    const cancelButton = screen.getByRole('button', { name: /cancel/i })
-    await userEvent.click(cancelButton)
+      // Verify the promise resolved to false
+      expect(confirmationResult).toBe(false)
 
-    // Verify the promise resolved to false
-    expect(confirmationResult).toBe(false)
-
-    // Dialog should be closed
-    expect(screen.queryByText('Cancel Test')).toBeNull()
+      // Dialog should be closed
+      expect(screen.queryByText('Cancel Test')).toBeNull()
+    })
   })
 
   it('should resolve false when dialog is dismissed', async () => {
@@ -135,16 +139,17 @@ describe('ConfirmationContext', () => {
     // Show the dialog
     const button = screen.getByText('Show Dialog')
     await userEvent.click(button)
+    await waitFor(async () => {
+      // Find and click the close button (usually an X in the corner)
+      const closeButton = screen.getByRole('button', { name: /close/i })
+      await userEvent.click(closeButton)
 
-    // Find and click the close button (usually an X in the corner)
-    const closeButton = screen.getByRole('button', { name: /close/i })
-    await userEvent.click(closeButton)
+      // Verify the promise resolved to false
+      expect(confirmationResult).toBe(false)
 
-    // Verify the promise resolved to false
-    expect(confirmationResult).toBe(false)
-
-    // Dialog should be closed
-    expect(screen.queryByText('Dismiss Test')).toBeNull()
+      // Dialog should be closed
+      expect(screen.queryByText('Dismiss Test')).toBeNull()
+    })
   })
 
   it('should render dialog with custom options', async () => {
@@ -169,11 +174,13 @@ describe('ConfirmationContext', () => {
     // Show the dialog
     const button = screen.getByText('Show Dialog')
     await userEvent.click(button)
-
-    // Verify all custom options are rendered
-    expect(screen.getByText('Custom Title')).toBeDefined()
-    expect(screen.getByText('Custom Description')).toBeDefined()
-    expect(screen.getByText('Yes, proceed')).toBeDefined()
-    expect(screen.getByText('No, go back')).toBeDefined()
+    // Wait for the dialog and its content
+    await waitFor(async () => {
+      // Verify all custom options are rendered
+      expect(screen.getByText('Custom Title')).toBeDefined()
+      expect(screen.getByText('Custom Description')).toBeDefined()
+      expect(screen.getByText('Yes, proceed')).toBeDefined()
+      expect(screen.getByText('No, go back')).toBeDefined()
+    })
   })
 })

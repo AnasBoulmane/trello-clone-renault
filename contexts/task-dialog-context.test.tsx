@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { cleanup, render, renderHook, screen } from '@testing-library/react'
+import { cleanup, render, renderHook, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TaskDialogProvider, useTaskDialog } from './task-dialog-context'
 
@@ -42,9 +42,11 @@ describe('TaskDialogContext', () => {
 
     const button = screen.getByText('Create Task')
     await userEvent.click(button)
-
-    expect(screen.getByText('Create new task')).toBeDefined()
-    expect(screen.getByText(/Describe your task in detail/)).toBeDefined()
+    // Wait for the dialog and its content
+    await waitFor(async () => {
+      expect(screen.getByText('Create new task')).toBeDefined()
+      expect(screen.getByText(/Describe your task in detail/)).toBeDefined()
+    })
   })
 
   it('should show dialog with edit mode and initial values', async () => {
@@ -76,13 +78,15 @@ describe('TaskDialogContext', () => {
 
     const button = screen.getByText('Edit Task')
     await userEvent.click(button)
-
-    // Check dialog title and content
-    expect(screen.getByText('Edit task')).toBeDefined()
-    expect((screen.getByTestId('title-input') as HTMLInputElement).value).toBe(mockTask.title)
-    expect((screen.getByTestId('description-input') as HTMLInputElement).value).toBe(
-      mockTask.description
-    )
+    // Wait for the dialog and its content
+    await waitFor(async () => {
+      // Check dialog title and content
+      expect(screen.getByText('Edit task')).toBeDefined()
+      expect((screen.getByTestId('title-input') as HTMLInputElement).value).toBe(mockTask.title)
+      expect((screen.getByTestId('description-input') as HTMLInputElement).value).toBe(
+        mockTask.description
+      )
+    })
   })
 
   it('should resolve with task data when submitted', async () => {
@@ -103,20 +107,22 @@ describe('TaskDialogContext', () => {
 
     const user = userEvent.setup()
     await user.click(screen.getByText('Open Dialog'))
+    // Wait for the dialog and its content
+    await waitFor(async () => {
+      // Fill and submit the form
+      await user.type(screen.getByTestId('title-input'), 'New Task')
+      await user.type(screen.getByTestId('description-input'), 'New Description')
+      await user.click(screen.getByRole('button', { name: /submit/i }))
 
-    // Fill and submit the form
-    await user.type(screen.getByTestId('title-input'), 'New Task')
-    await user.type(screen.getByTestId('description-input'), 'New Description')
-    await user.click(screen.getByRole('button', { name: /submit/i }))
+      // Verify the resolved data
+      expect(resolvedTask).toEqual({
+        title: 'New Task',
+        description: 'New Description',
+      })
 
-    // Verify the resolved data
-    expect(resolvedTask).toEqual({
-      title: 'New Task',
-      description: 'New Description',
+      // Dialog should be closed
+      expect(screen.queryByText('Create new task')).toBeNull()
     })
-
-    // Dialog should be closed
-    expect(screen.queryByText('Create new task')).toBeNull()
   })
 
   it('should resolve with undefined when cancelled', async () => {
@@ -136,13 +142,15 @@ describe('TaskDialogContext', () => {
 
     const user = userEvent.setup()
     await user.click(screen.getByText('Open Dialog'))
+    // Wait for the dialog and its content
+    await waitFor(async () => {
+      // Click cancel button
+      await user.click(screen.getByRole('button', { name: /cancel/i }))
 
-    // Click cancel button
-    await user.click(screen.getByRole('button', { name: /cancel/i }))
-
-    // Verify resolution
-    expect(resolvedTask).toBeUndefined()
-    expect(screen.queryByText('Create new task')).toBeNull()
+      // Verify resolution
+      expect(resolvedTask).toBeUndefined()
+      expect(screen.queryByText('Create new task')).toBeNull()
+    })
   })
 
   it('should resolve with undefined when dialog is dismissed', async () => {
@@ -163,10 +171,13 @@ describe('TaskDialogContext', () => {
     const user = userEvent.setup()
     await user.click(screen.getByText('Open Dialog'))
 
-    // Click the close button (X in the corner)
-    await user.click(screen.getByRole('button', { name: /close/i }))
+    // Wait for the dialog and its content
+    await waitFor(async () => {
+      // Click the close button (X in the corner)
+      await user.click(screen.getByRole('button', { name: /close/i }))
 
-    expect(resolvedTask).toBeUndefined()
-    expect(screen.queryByText('Create new task')).toBeNull()
+      expect(resolvedTask).toBeUndefined()
+      expect(screen.queryByText('Create new task')).toBeNull()
+    })
   })
 })

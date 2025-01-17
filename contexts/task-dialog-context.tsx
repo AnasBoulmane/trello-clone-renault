@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 import { Task } from '@/types/task'
-import { TaskDialog } from '@/components/tasks/task-dialog'
+import { TaskDialogLoader } from '@/components/tasks/task-dialog-loader'
 
 // Options that can be passed when opening the dialog
 type TaskDialogOptions = {
@@ -90,7 +90,7 @@ export function TaskDialogProvider({ children }: { children: ReactNode }) {
   return (
     <TaskDialogContext.Provider value={{ openDialog }}>
       {children}
-      <TaskDialog
+      <TaskDialogLoader
         open={state.isOpen}
         onOpenChange={handleOpenChange}
         mode={state.mode}

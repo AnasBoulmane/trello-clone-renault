@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
+import { ConfirmationDialogLoader } from '@/components/ui/confirmation-dialog-loader'
 
 type ConfirmationOptions = {
   title: string
@@ -77,7 +77,7 @@ export function ConfirmationProvider({ children }: { children: ReactNode }) {
   return (
     <ConfirmationContext.Provider value={{ confirm }}>
       {children}
-      <ConfirmationDialog
+      <ConfirmationDialogLoader
         open={state.isOpen}
         onOpenChange={handleOpenChange}
         title={state.title}
