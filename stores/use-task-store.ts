@@ -1,6 +1,7 @@
 // store/use-task-store.ts
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { toast } from 'sonner'
 import { DropResult } from '@hello-pangea/dnd'
 import { BoardColumns, Task } from '@/types/task'
 import {
@@ -66,6 +67,9 @@ export const useTaskStore = create<TaskState>()(
             },
           }))
         } catch (error) {
+          toast.error('Error fetching tasks', {
+            description: 'Please try again later',
+          })
           console.error('Error fetching tasks:', error)
         }
       },
@@ -93,6 +97,9 @@ export const useTaskStore = create<TaskState>()(
             },
           }))
         } catch (error) {
+          toast.error('Error adding task', {
+            description: 'Please try again later',
+          })
           console.error('Error adding task:', error)
         }
       },
@@ -115,6 +122,9 @@ export const useTaskStore = create<TaskState>()(
             }
           })
         } catch (error) {
+          toast.error('Error updating task', {
+            description: 'Please try again later',
+          })
           console.error('Error updating task:', error)
         }
       },
@@ -133,6 +143,9 @@ export const useTaskStore = create<TaskState>()(
             return { columns: updatedColumns as BoardColumns }
           })
         } catch (error) {
+          toast.error('Error deleting task', {
+            description: 'Please try again later',
+          })
           console.error('Error deleting task:', error)
         }
       },
@@ -186,6 +199,9 @@ export const useTaskStore = create<TaskState>()(
                 [sourceId]: state.columns[sourceId],
                 [destinationId]: state.columns[destinationId],
               },
+            })
+            toast.error('Error updating task', {
+              description: 'Please try again later',
             })
             console.error('Error updating task:', error)
           }

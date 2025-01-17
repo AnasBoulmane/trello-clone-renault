@@ -1,5 +1,6 @@
 import Image from 'next/image'
 
+import { Toaster } from '@/components/ui/sonner'
 import { TaskBoard } from '@/components/tasks/task-board'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ConfirmationProvider } from '@/contexts/confirmation-context'
@@ -28,6 +29,7 @@ export default function Home() {
         <ConfirmationProvider>
           <TaskDialogProvider>
             <TaskBoard />
+            <Toaster />
           </TaskDialogProvider>
         </ConfirmationProvider>
       </main>
