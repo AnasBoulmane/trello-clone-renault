@@ -1,15 +1,15 @@
 'use client'
 
-import { createContext, useContext, ReactNode } from 'react'
+import { createContext, useContext, ReactNode, useState } from 'react'
 import { DropResult } from '@hello-pangea/dnd'
 
 import { BoardColumns, Task } from '@/types/task'
-import { useDragAndDrop } from '@/hooks/use-dnd'
-import { createTask, fetchTasks } from '@/lib/api'
+import { createTask, fetchTasks, updateTask as putTask } from '@/lib/api'
 
 type TaskContextType = {
   columns: BoardColumns
   addTask: (task: Partial<Task>) => Promise<void>
+  updateTask: (task: Partial<Task>) => Promise<void>
   fetchInitialTasks: () => void
   handleDragEnd: (result: DropResult) => void
 }
@@ -20,11 +20,11 @@ const TaskContext = createContext<TaskContextType | undefined>(undefined)
  * TaskProvider Component: a context provider that centralizes the state and logic for the task board exercise.
  **/
 export function TaskProvider({ children }: { children: ReactNode }) {
-  const { columns, setColumns, handleDragEnd } = useDragAndDrop({
+  const [columns, setColumns] = useState<BoardColumns>({
     todo: [],
     inProgress: [],
     done: [],
-  } as BoardColumns)
+  })
 
   // fetch tasks from the API
   const fetchInitialTasks = () => {
@@ -35,7 +35,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
           id: task.id,
           title: task.title,
           // this because the API doesn't return the description field for todos
-          description: `Task ${task.id} description`,
+          description: task.description || `Task ${task.id} description`,
+          status: task.status || 'todo',
         }))
 
         setColumns((prev: BoardColumns) => ({
@@ -61,6 +62,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
             id: data.id,
             title: data.title,
             description: data.description,
+            status: 'todo',
           },
           ...prev.todo,
         ],
@@ -71,8 +73,81 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Update a task
+  const updateTask = async (task: Partial<Task>) => {
+    if (!task.title?.trim()) return
+
+    try {
+      const data = await putTask(task)
+
+      setColumns((prev) => {
+        const status = data.status || ('todo' as keyof BoardColumns)
+        const updatedTasks = prev[status].map((t) => (t.id === data.id ? data : t))
+        return {
+          ...prev,
+          [status]: updatedTasks,
+        }
+      })
+    } catch (error) {
+      console.error('Error updating task:', error)
+      // Here you could integrate with a toast notification system
+    }
+  }
+
+  const handleDragEnd = async (result: DropResult) => {
+    try {
+      const { source, destination } = result
+      if (!destination) return
+
+      const sourceId = source.droppableId as keyof BoardColumns
+      const destinationId = destination.droppableId as keyof BoardColumns
+      const sourceColumn = Array.from(columns[sourceId])
+      const [movedItem] = sourceColumn.splice(source.index, 1)
+
+      // If dragging within the same column
+      if (sourceId === destinationId) {
+        sourceColumn.splice(destination.index, 0, movedItem)
+        setColumns((prev) => ({
+          ...prev,
+          [sourceId]: sourceColumn,
+        }))
+      } else {
+        // If dragging between different columns
+        const destColumn = Array.from(columns[destinationId])
+        const updatedItem = {
+          ...movedItem,
+          status: destinationId,
+          completed: destinationId === 'done',
+        }
+        // Optimistically update the state
+        destColumn.splice(destination.index, 0, updatedItem)
+        setColumns((prev) => ({
+          ...prev,
+          [sourceId]: sourceColumn,
+          [destinationId]: destColumn,
+        }))
+        // Update the task on the server
+        putTask(updatedItem).catch((error) => {
+          // revert the changes if the update fails
+          setColumns((prev) => ({
+            ...prev,
+            [sourceId]: columns[sourceId],
+            [destinationId]: columns[destinationId],
+          }))
+          console.error('Error updating task:', error)
+          // Here you could integrate with a toast notification
+        })
+      }
+    } catch (error) {
+      console.error('Error updating task:', error)
+      // Here you could integrate with a toast notification
+    }
+  }
+
   return (
-    <TaskContext.Provider value={{ columns, addTask, fetchInitialTasks, handleDragEnd }}>
+    <TaskContext.Provider
+      value={{ columns, addTask, updateTask, fetchInitialTasks, handleDragEnd }}
+    >
       {children}
     </TaskContext.Provider>
   )

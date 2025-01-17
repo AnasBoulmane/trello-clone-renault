@@ -1,6 +1,6 @@
 // lib/api.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchTasks, createTask } from './api'
+import { fetchTasks, createTask, updateTask } from './api'
 
 describe('API Functions', () => {
   const API_BASE_URL = 'http://api.example.com'
@@ -12,11 +12,10 @@ describe('API Functions', () => {
   describe('fetchTasks', () => {
     it('should fetch tasks successfully', async () => {
       const mockTasks = [
-        { id: '1', title: 'Task 1' },
-        { id: '2', title: 'Task 2' },
+        { id: 1, title: 'Task 1', status: 'todo', description: 'Description 1' },
+        { id: 2, title: 'Task 2', status: 'inProgress', description: 'Description 2' },
       ]
 
-      // Setup mock response
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockTasks),
@@ -24,49 +23,88 @@ describe('API Functions', () => {
 
       const tasks = await fetchTasks()
 
-      // Verify the response
       expect(tasks).toEqual(mockTasks)
-
-      // Verify the correct URL was called
-      const expectedUrl = `${API_BASE_URL}/users/1/todos`
-      expect(fetch).toHaveBeenCalledWith(expectedUrl)
+      expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/users/1/todos`)
     })
 
-    it('should handle fetch error', async () => {
-      // Mock error response
+    it('should handle network errors', async () => {
+      global.fetch = vi.fn().mockRejectedValueOnce(new Error('Network error'))
+      await expect(fetchTasks()).rejects.toThrow('Network error')
+    })
+
+    it('should handle API errors', async () => {
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: false,
         status: 404,
       })
-
       await expect(fetchTasks()).rejects.toThrow('HTTP error! status: 404')
     })
   })
 
-  describe('addTask', () => {
-    it('should add task successfully', async () => {
-      const newTask = { title: 'New Task', description: 'Description' }
-      const returnedTask = { ...newTask, id: '3', completed: false }
+  describe('createTask', () => {
+    it('should create task with correct defaults', async () => {
+      const newTask = {
+        title: 'New Task',
+        description: 'Description',
+      }
 
-      // Setup mock response
+      const serverResponse = {
+        ...newTask,
+        id: 1,
+        status: 'todo',
+        completed: false,
+        userId: 1,
+      }
+
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(returnedTask),
+        json: () => Promise.resolve(serverResponse),
       })
 
-      const task = await createTask(newTask)
+      const result = await createTask(newTask)
 
-      // Verify the response
-      expect(task).toEqual(returnedTask)
-
-      // Verify the request was made correctly
-      const expectedUrl = `${API_BASE_URL}/users/1/todos`
-      expect(fetch).toHaveBeenCalledWith(expectedUrl, {
+      expect(result).toEqual(serverResponse)
+      expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/todos`, {
         method: 'POST',
         body: JSON.stringify({
-          title: newTask.title,
-          description: newTask.description,
+          ...newTask,
           completed: false,
+          status: 'todo',
+          userId: 1,
+        }),
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8',
+        },
+      })
+    })
+  })
+
+  describe('updateTask', () => {
+    it('should update task with status change', async () => {
+      const task = {
+        id: 1,
+        title: 'Task',
+        description: 'Description',
+        status: 'inProgress' as const,
+        completed: false,
+      }
+
+      global.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(task),
+      })
+
+      const result = await updateTask(task)
+
+      expect(result).toEqual(task)
+      expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/todos/${task.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          title: task.title,
+          description: task.description,
+          completed: task.completed,
+          status: task.status,
+          userId: 1,
         }),
         headers: {
           'Content-type': 'application/json; charset=UTF-8',
@@ -74,16 +112,18 @@ describe('API Functions', () => {
       })
     })
 
-    it('should handle add task error', async () => {
-      const newTask = { title: 'New Task', description: 'Description' }
+    it('should handle invalid task id', async () => {
+      const invalidUpdate = {
+        id: 999,
+        title: 'Invalid Task',
+      }
 
-      // Mock error response
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: false,
-        status: 500,
+        status: 404,
       })
 
-      await expect(createTask(newTask)).rejects.toThrow('HTTP error! status: 500')
+      await expect(updateTask(invalidUpdate)).rejects.toThrow('HTTP error! status: 404')
     })
   })
 })

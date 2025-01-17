@@ -65,7 +65,7 @@ describe('TaskBoard Component', () => {
   // Let's test adding a new task
   it('should add a new task to the todo column', async () => {
     const newTask = {
-      id: '3',
+      id: 3,
       title: 'Test Task 123',
       description: 'Test Description 123',
     }

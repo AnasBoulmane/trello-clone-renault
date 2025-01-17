@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, act, renderHook } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import { TaskProvider, useTaskContext } from './task-context'
-import { fetchTasks, createTask } from '@/lib/api'
+import { fetchTasks, createTask, updateTask } from '@/lib/api'
 import { DropResult } from '@hello-pangea/dnd'
 
 // Mock the API
 vi.mock('@/lib/api', () => ({
   fetchTasks: vi.fn(),
   createTask: vi.fn(),
+  updateTask: vi.fn(),
 }))
 
 describe('TaskContext', () => {
@@ -35,7 +36,7 @@ describe('TaskContext', () => {
 
   it('should add new task', async () => {
     const newTask = { title: 'New Task', description: 'Description' }
-    const createdTask = { id: '1', ...newTask }
+    const createdTask = { id: 1, ...newTask, status: 'todo' }
     ;(createTask as any).mockResolvedValueOnce(createdTask)
 
     const { result } = renderHook(() => useTaskContext(), { wrapper })
@@ -46,31 +47,6 @@ describe('TaskContext', () => {
 
     expect(createTask).toHaveBeenCalledWith(newTask)
     expect(result.current.columns.todo[0]).toEqual(createdTask)
-  })
-
-  it('should handle drag and drop between columns', async () => {
-    const { result } = renderHook(() => useTaskContext(), { wrapper })
-
-    const task = { id: '1', title: 'Task 1', description: 'Description' }
-
-    // Set initial state with a task in todo
-    act(() => {
-      result.current.columns.todo.push(task)
-    })
-
-    // Simulate drag from todo to inProgress
-    await act(async () => {
-      result.current.handleDragEnd({
-        destination: { droppableId: 'inProgress', index: 0 },
-        source: { droppableId: 'todo', index: 0 },
-        draggableId: '1',
-        type: 'DEFAULT',
-      } as DropResult)
-    })
-
-    expect(result.current.columns.todo).toHaveLength(0)
-    expect(result.current.columns.inProgress).toHaveLength(1)
-    expect(result.current.columns.inProgress[0]).toEqual(task)
   })
 
   // Test error handling during initial fetch
@@ -85,5 +61,96 @@ describe('TaskContext', () => {
 
     expect(fetchTasks).toHaveBeenCalled()
     expect(result.current.columns.todo).toHaveLength(0)
+  })
+
+  it('should handle drag within same column', async () => {
+    const tasks = [
+      { id: 1, title: 'Task 1', status: 'todo' },
+      { id: 2, title: 'Task 2', status: 'todo' },
+    ]
+
+    const { result } = renderHook(() => useTaskContext(), { wrapper })
+
+    // Set initial state
+    act(() => {
+      result.current.columns.todo.push(...tasks)
+    })
+
+    const dropResult: DropResult = {
+      destination: { droppableId: 'todo', index: 1 },
+      source: { droppableId: 'todo', index: 0 },
+      draggableId: '1',
+      type: 'DEFAULT',
+    }
+
+    await act(async () => {
+      await result.current.handleDragEnd(dropResult)
+    })
+
+    expect(result.current.columns.todo[1].id).toBe(1)
+    expect(updateTask).not.toHaveBeenCalled() // No API call needed for same column
+  })
+
+  it('should handle drag between columns with optimistic update', async () => {
+    const task = { id: 1, title: 'Task 1', status: 'todo' }
+    const updatedTask = { ...task, status: 'inProgress', completed: false }
+    ;(updateTask as any).mockResolvedValueOnce(updatedTask)
+
+    const { result } = renderHook(() => useTaskContext(), { wrapper })
+
+    // Set initial state
+    act(() => {
+      result.current.columns.todo.push(task)
+    })
+
+    const dropResult: DropResult = {
+      destination: { droppableId: 'inProgress', index: 0 },
+      source: { droppableId: 'todo', index: 0 },
+      draggableId: '1',
+      type: 'DEFAULT',
+    }
+
+    await act(async () => {
+      await result.current.handleDragEnd(dropResult)
+    })
+
+    // Verify optimistic update
+    expect(result.current.columns.todo).toHaveLength(0)
+    expect(result.current.columns.inProgress).toHaveLength(1)
+    expect(result.current.columns.inProgress[0].status).toBe('inProgress')
+    expect(updateTask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 1,
+        status: 'inProgress',
+        completed: false,
+      })
+    )
+  })
+
+  it('should revert changes on failed drag between columns', async () => {
+    const task = { id: 1, title: 'Task 1', status: 'todo' }
+    ;(updateTask as any).mockRejectedValueOnce(new Error('Update failed'))
+
+    const { result } = renderHook(() => useTaskContext(), { wrapper })
+
+    // Set initial state
+    act(() => {
+      result.current.columns.todo.push(task)
+    })
+
+    const dropResult: DropResult = {
+      destination: { droppableId: 'inProgress', index: 0 },
+      source: { droppableId: 'todo', index: 0 },
+      draggableId: '1',
+      type: 'DEFAULT',
+    }
+
+    await act(async () => {
+      await result.current.handleDragEnd(dropResult)
+    })
+
+    // Verify state reverted after error
+    expect(result.current.columns.todo).toHaveLength(1)
+    expect(result.current.columns.inProgress).toHaveLength(0)
   })
 })

@@ -34,7 +34,7 @@ describe('TaskToolbar Component', () => {
 
     // Verify dialog content is visible
     expect(screen.getByText('Create new task')).toBeDefined()
-    expect(screen.getByText(/describre your task in detail/i)).toBeDefined()
+    expect(screen.getByText(/describe your task in detail./i)).toBeDefined()
     // Check if form fields are rendered
     expect(screen.getByTestId('title-input')).toBeDefined()
     expect(screen.getByTestId('description-input')).toBeDefined()
