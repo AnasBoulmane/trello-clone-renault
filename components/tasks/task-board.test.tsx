@@ -5,10 +5,14 @@ import userEvent from '@testing-library/user-event'
 
 import { TaskBoard } from './task-board'
 import { useTaskContext } from '@/contexts/task-context'
+import { useConfirmation } from '@/contexts/confirmation-context'
 
 // Mock the context
 vi.mock('@/contexts/task-context', () => ({
   useTaskContext: vi.fn(),
+}))
+vi.mock('@/contexts/confirmation-context', () => ({
+  useConfirmation: vi.fn(),
 }))
 
 // integration test with the TaskContext

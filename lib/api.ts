@@ -40,6 +40,7 @@ export const updateTask = async (task: Partial<Task>): Promise<Task> => {
   const response = await fetch(`${BASE_URL}/todos/${task.id}`, {
     method: 'PUT',
     body: JSON.stringify({
+      id: task.id,
       title: task.title,
       description: task.description,
       completed: task.completed,
@@ -57,4 +58,14 @@ export const updateTask = async (task: Partial<Task>): Promise<Task> => {
 
   const data = await response.json()
   return data
+}
+
+export const deleteTask = async (id: string | number): Promise<void> => {
+  const response = await fetch(`${BASE_URL}/todos/${id}`, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`)
+  }
 }

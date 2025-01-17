@@ -3,10 +3,14 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TaskCard } from './task-card'
 import { useTaskContext } from '@/contexts/task-context'
+import { useConfirmation } from '@/contexts/confirmation-context'
 
 // Mock the context
 vi.mock('@/contexts/task-context', () => ({
   useTaskContext: vi.fn(),
+}))
+vi.mock('@/contexts/confirmation-context', () => ({
+  useConfirmation: vi.fn(),
 }))
 
 describe('TaskCard Component', () => {
@@ -14,25 +18,29 @@ describe('TaskCard Component', () => {
     id: 1,
     title: 'Test Task',
     description: 'Test Description',
-    status: 'todo' as const,
+    status: 'todo',
   }
 
   const mockProvided = {
     innerRef: () => {},
-    draggableProps: {
-      'data-rbd-draggable-context-id': '1',
-      'data-rbd-draggable-id': '1',
-    },
-    dragHandleProps: {
-      'data-rbd-drag-handle-draggable-id': '1',
-      'data-rbd-drag-handle-context-id': '1',
-    },
+    draggableProps: {},
+    dragHandleProps: {},
   }
+
+  const mockUpdateTask = vi.fn()
+  const mockDeleteTask = vi.fn()
+  const mockConfirm = vi.fn()
 
   beforeEach(() => {
     cleanup()
+    vi.resetAllMocks()
+    // Setup context mocks
     ;(useTaskContext as any).mockReturnValue({
-      updateTask: vi.fn(),
+      updateTask: mockUpdateTask,
+      deleteTask: mockDeleteTask,
+    })
+    ;(useConfirmation as any).mockReturnValue({
+      confirm: mockConfirm,
     })
   })
 
@@ -67,5 +75,43 @@ describe('TaskCard Component', () => {
     expect((screen.getByTestId('description-input') as HTMLInputElement).value).toBe(
       mockTask.description
     )
+  })
+
+  it('handles task deletion with confirmation', async () => {
+    mockConfirm.mockResolvedValueOnce(true) // User confirms deletion
+
+    render(<TaskCard task={mockTask} provided={mockProvided} isDragging={false} />)
+
+    const user = userEvent.setup()
+    const deleteButton = screen.getByTestId('delete-task')
+
+    await user.click(deleteButton)
+
+    // Verify confirmation dialog was shown with correct options
+    expect(mockConfirm).toHaveBeenCalledWith({
+      title: 'Delete Task',
+      description: 'Are you sure you want to delete this task? This action cannot be undone.',
+      confirmText: 'Delete',
+      variant: 'destructive',
+    })
+
+    // Verify delete was called
+    expect(mockDeleteTask).toHaveBeenCalledWith(mockTask.id)
+  })
+
+  it('does not delete task when confirmation is cancelled', async () => {
+    mockConfirm.mockResolvedValueOnce(false) // User cancels deletion
+
+    render(<TaskCard task={mockTask} provided={mockProvided} isDragging={false} />)
+
+    const user = userEvent.setup()
+    const deleteButton = screen.getByTestId('delete-task')
+
+    await user.click(deleteButton)
+
+    // Verify confirmation was shown
+    expect(mockConfirm).toHaveBeenCalled()
+    // Verify delete was not called
+    expect(mockDeleteTask).not.toHaveBeenCalled()
   })
 })

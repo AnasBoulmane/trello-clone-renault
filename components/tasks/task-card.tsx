@@ -1,12 +1,14 @@
-import { GripVertical, Pencil } from 'lucide-react'
+'use client'
+import { GripVertical, Pencil, Trash } from 'lucide-react'
 import { DraggableProvided } from '@hello-pangea/dnd'
 
-import { Card, CardHeader, CardContent } from '../ui/card'
 import { Task } from '@/types/task'
 import { cn } from '@/lib/utils'
 import { useTaskContext } from '@/contexts/task-context'
-import { TaskDialog } from './task-dialog'
+import { useConfirmation } from '@/contexts/confirmation-context'
+import { Card, CardHeader, CardContent } from '../ui/card'
 import { DialogTrigger } from '../ui/dialog'
+import { TaskDialog } from './task-dialog'
 
 type TaskCardProps = {
   task: Task
@@ -15,7 +17,24 @@ type TaskCardProps = {
 }
 
 export function TaskCard({ task, provided, isDragging }: TaskCardProps) {
-  const { updateTask } = useTaskContext()
+  const { updateTask, deleteTask } = useTaskContext()
+  const confirmation = useConfirmation()
+
+  // Handle task deletion with confirmation
+  const handleDelete = async () => {
+    const confirmed = await confirmation.confirm({
+      title: 'Delete Task',
+      description: 'Are you sure you want to delete this task? This action cannot be undone.',
+      confirmText: 'Delete',
+      variant: 'destructive',
+    })
+
+    if (confirmed) {
+      await deleteTask(task.id)
+    }
+  }
+
+  // Render the task card
   return (
     <Card
       ref={provided.innerRef}
@@ -30,6 +49,16 @@ export function TaskCard({ task, provided, isDragging }: TaskCardProps) {
     >
       <CardHeader className="p-4 flex flex-row gap-2">
         <div className="font-medium flex-1">{task.title}</div>
+        <button
+          role="button"
+          tabIndex={0}
+          className="flex self-start "
+          onClick={handleDelete}
+          data-testid="delete-task"
+        >
+          <Trash className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </button>
+
         <TaskDialog onSubmit={updateTask} mode="edit" initialValues={task}>
           <DialogTrigger asChild>
             <Pencil

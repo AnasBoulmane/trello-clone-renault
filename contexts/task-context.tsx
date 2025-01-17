@@ -4,12 +4,18 @@ import { createContext, useContext, ReactNode, useState } from 'react'
 import { DropResult } from '@hello-pangea/dnd'
 
 import { BoardColumns, Task } from '@/types/task'
-import { createTask, fetchTasks, updateTask as putTask } from '@/lib/api'
+import {
+  createTask,
+  fetchTasks,
+  updateTask as updateTaskApi,
+  deleteTask as deleteTaskApi,
+} from '@/lib/api'
 
 type TaskContextType = {
   columns: BoardColumns
   addTask: (task: Partial<Task>) => Promise<void>
   updateTask: (task: Partial<Task>) => Promise<void>
+  deleteTask: (id: string | number) => Promise<void>
   fetchInitialTasks: () => void
   handleDragEnd: (result: DropResult) => void
 }
@@ -78,7 +84,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     if (!task.title?.trim()) return
 
     try {
-      const data = await putTask(task)
+      const data = await updateTaskApi(task)
 
       setColumns((prev) => {
         const status = data.status || ('todo' as keyof BoardColumns)
@@ -90,6 +96,25 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       })
     } catch (error) {
       console.error('Error updating task:', error)
+      // Here you could integrate with a toast notification system
+    }
+  }
+
+  // Delete a task
+  const deleteTask = async (id: string | number) => {
+    try {
+      await deleteTaskApi(Number(id))
+      setColumns((prev) => {
+        const updatedColumns = Object.fromEntries(
+          Object.entries(prev).map(([key, value]) => [
+            key,
+            value.filter((task) => task.id !== Number(id)),
+          ])
+        )
+        return updatedColumns as BoardColumns
+      })
+    } catch (error) {
+      console.error('Error deleting task:', error)
       // Here you could integrate with a toast notification system
     }
   }
@@ -127,7 +152,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
           [destinationId]: destColumn,
         }))
         // Update the task on the server
-        putTask(updatedItem).catch((error) => {
+        updateTaskApi(updatedItem).catch((error) => {
           // revert the changes if the update fails
           setColumns((prev) => ({
             ...prev,
@@ -146,7 +171,7 @@ export function TaskProvider({ children }: { children: ReactNode }) {
 
   return (
     <TaskContext.Provider
-      value={{ columns, addTask, updateTask, fetchInitialTasks, handleDragEnd }}
+      value={{ columns, addTask, updateTask, deleteTask, fetchInitialTasks, handleDragEnd }}
     >
       {children}
     </TaskContext.Provider>

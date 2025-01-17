@@ -100,6 +100,7 @@ describe('API Functions', () => {
       expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/todos/${task.id}`, {
         method: 'PUT',
         body: JSON.stringify({
+          id: task.id,
           title: task.title,
           description: task.description,
           completed: task.completed,

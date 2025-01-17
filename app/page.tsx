@@ -1,7 +1,9 @@
+import Image from 'next/image'
+
 import { TaskBoard } from '@/components/tasks/task-board'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { ConfirmationProvider } from '@/contexts/confirmation-context'
 import { TaskProvider } from '@/contexts/task-context'
-import Image from 'next/image'
 
 export default function Home() {
   return (
@@ -23,9 +25,11 @@ export default function Home() {
           </div>
         </div>
         {/* tasks */}
-        <TaskProvider>
-          <TaskBoard />
-        </TaskProvider>
+        <ConfirmationProvider>
+          <TaskProvider>
+            <TaskBoard />
+          </TaskProvider>
+        </ConfirmationProvider>
       </main>
       <footer className="flex gap-6 flex-wrap items-center justify-center">
         <a
