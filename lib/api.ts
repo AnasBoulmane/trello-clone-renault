@@ -38,7 +38,7 @@ export const createTask = async (newTask: Partial<Task>): Promise<Task> => {
 
 export const updateTask = async (task: Partial<Task>): Promise<Task> => {
   const response = await fetch(`${BASE_URL}/todos/${task.id}`, {
-    method: 'PUT',
+    method: 'PATCH', // PUT is buggy for new tasks with id over 200
     body: JSON.stringify({
       id: task.id,
       title: task.title,
