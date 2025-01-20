@@ -170,11 +170,11 @@ This project demonstrates several key skills valued by employers:
 
 The codebase showcases professional-grade development practices and architecture decisions that translate directly to enterprise applications.
 
-Anass Boulmane <br/>
-📧 anassboulmane@gmail.com | 📞 +212 690434426 <br/>
-[LinkedIn](https://www.linkedin.com/in/anas-boulmane/) | [GitHub](https://github.com/AnasBoulmane) <br/>
-
 ## 🔍 Other projects
 
 - [advanced-search-dropdown](https://github.com/AnasBoulmane/advanced-search-dropdown): A high-performance, feature-rich dropdown component built with vanilla JavaScript and Tailwind CSS. This implementation focuses on delivering a smooth user experience while maintaining clean, maintainable code architecture.
 - [ch-fashion-app](https://github.com/AnasBoulmane/ch-fashion-app): A Chanel's e-commerce platform that showcases modern web architecture, advanced caching strategies, and elegant solutions to complex pagination challenges
+
+Anass Boulmane <br/>
+📧 anassboulmane@gmail.com | 📞 +212 690434426 <br/>
+[LinkedIn](https://www.linkedin.com/in/anas-boulmane/) | [GitHub](https://github.com/AnasBoulmane) <br/>
